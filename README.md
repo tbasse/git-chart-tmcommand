@@ -14,3 +14,7 @@ A TextMate command for Git Bundles that generates Charts via Google Chart API.
 2. Unpack downloaded File
 3. Rename to "Git Charts.tmCommand"
 4. Double-click it
+
+## Credits ##
+
+The "Punchcard" Chart is based on code found [here](http://markelikalderon.com/2008/05/14/git-scatter-graph-for-textmate/ "Git Scatter Graph for TextMate").
