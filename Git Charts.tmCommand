@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>beforeRunningCommand</key>
+	<string>nop</string>
+	<key>command</key>
+	<string>#!/usr/bin/env ruby
+
+require 'time'
+require 'date'
+require 'URI'
+
+def chart_commits
+  lines = `git log --pretty=format:%ai`
+  times = lines.map { |l| Time.parse l }
+
+  dots = []
+  0.upto(7) { |wday|
+    0.upto(23) { |hour|
+      dots &lt;&lt; [hour, wday, times.find_all { |t| t.hour == hour &amp;&amp; t.wday == wday }.size]
+    }
+  }
+  
+  max = dots.map { |h,w,c| c }.max
+
+  title = "Commit Activity by Day and Hour"
+
+  url = "http://chart.apis.google.com/chart?chtt=#{title}&amp;chs=800x350&amp;chds=-1,24,-1,7,0,#{max}&amp;chf=bg,s,efefef&amp;chd=t:#{dots.transpose.map { |c| c.join(",") }.join("|")}&amp;chxt=x,y&amp;chm=o,333333,1,1.0,25.0&amp;chxl=0:||12am|1|2|3|4|5|6|7|8|9|10|11|12pm|1|2|3|4|5|6|7|8|9|10|11||1:||Sun|Mon|Tue|Wed|Thr|Fri|Sat|&amp;cht=s&amp;chma=20,20,20,20"
+
+  out = URI.escape(url)
+  
+  return out
+end
+
+def chart_authors
+  authors = _get_authors
+
+  c = Hash.new(0)
+  authors.each { |n| c[n] += 1 }
+  c = c.sort_by { |x| x[1] }
+  c = c.reverse
+
+  limit = ( c.count &lt; 10 ? c.count : 10 )
+
+  max = c.map { |n, x| x  }.max
+
+  values = []
+  authors = []
+  authors_count = []
+  
+  c.each { |n, c| values &lt;&lt; c &amp;&amp; authors &lt;&lt; n &amp;&amp; authors_count &lt;&lt; n + ' (' + c.to_s + ')' }
+  
+  values = values[0..limit-1].join(',')
+  authors = authors[0..limit-1].join('|')
+  authors_count = authors_count[0..limit-1].join('|')
+
+  title = "Top " + limit.to_s + " Authors"
+
+  url = "http://chart.apis.google.com/chart?chtt=#{title}&amp;chs=800x350&amp;cht=p&amp;chds=0,#{max}&amp;chd=t:#{values}&amp;chl=#{authors_count}&amp;chdl=#{authors}&amp;chdlp=l&amp;chp=360&amp;chma=20,20,20,20"
+
+  out = URI.escape(url)
+  return out
+  
+end
+
+def chart_timeline
+  lines = `git log --pretty=format:%ai`
+  times = lines.collect { |d| Time.parse(d.to_s).strftime("%Y-%m-%d") }
+  
+  ds = Date.parse times[-1].to_s
+  de = Date.parse times[0].to_s
+  
+  dates = Hash.new(0)
+  (ds .. de).each{ |date| dates[date.to_s] = 0 }
+
+  times.each { |v| dates[v] += 1 }
+  dates = dates.sort
+
+  datelimit = ( dates.count &lt; 90 ? dates.count : 90 )
+
+  data = []
+  (1..datelimit).each{ |d| data &lt;&lt; dates[0-d] }
+  data = data.sort
+  
+  max = data.map { |n, x| x  }.max + 5
+
+  chart_data = ''
+  data.each { |k, v| chart_data += v.to_s + ',' }
+  chart_data = chart_data.chop
+  
+  marks_step = ''
+  (0..data.count-1).step(10) { |x| marks_step += '|'+x.to_s }
+
+  marks_str = ''
+  (0..data.count-1).step(10) { |x| marks_str += '|'+data[x][0].to_s }
+  
+  cd_size = "chs=800x350"
+  cd_grid = "chg=-1,-1,0,0"
+  cd_axis = "chxt=x,y"
+  cd_axis_pos = "chxp=#{marks_step}"
+  cd_axis_range = "chxr=0,0,#{data.count}|1,0,#{max}"
+  cd_tickmarks = "chxtc=0,10|1,5"
+  cd_axis_value = "chxl=0:#{marks_str}"
+  cd_data = "t:#{chart_data}"
+  cd_data_scale = "chds=0,#{max}"
+  cd_colors = "chco=3D7930,FF9900,666666"
+  
+  title = "Commit Activity over the last " + datelimit.to_s + " Days"
+  
+  url = "http://chart.apis.google.com/chart?chtt=#{title}&amp;cht=lc&amp;chxl=0:#{marks_str}&amp;chxp=#{marks_step}&amp;#{cd_axis_range}&amp;#{cd_tickmarks}&amp;#{cd_axis}&amp;#{cd_size}&amp;#{cd_data_scale}&amp;chd=#{cd_data}&amp;#{cd_grid}&amp;#{cd_colors}&amp;chma=20,20,20,20"
+  
+  out = URI.escape(url)
+  return out
+  
+end
+
+def _get_authors
+  lines = `git log --pretty=format:%an`
+  authors = lines.map { |l| l.strip }
+  return authors
+end
+
+puts '&lt;!DOCTYPE html&gt;
+
+&lt;html lang="en"&gt;
+&lt;head&gt;
+	&lt;meta charset="utf-8" /&gt;
+	&lt;title&gt;Git Charts&lt;/title&gt;
+	&lt;style type="text/css" media="screen"&gt;
+		body {
+			margin: 20px;
+			padding: 0px;
+		}
+		img {
+			margin: 20px 0px;
+		}
+	&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;'
+puts '&lt;img src="'+chart_commits+'" /&gt;'
+puts '&lt;img src="'+chart_timeline+'" /&gt;'
+puts '&lt;img src="'+chart_authors+'" /&gt;'
+puts '&lt;/body&gt;
+&lt;/html&gt;'</string>
+	<key>input</key>
+	<string>none</string>
+	<key>keyEquivalent</key>
+	<string>@G</string>
+	<key>name</key>
+	<string>Show Git Charts</string>
+	<key>output</key>
+	<string>showAsHTML</string>
+	<key>uuid</key>
+	<string>CFA55679-6FF9-46F7-BE1E-5B5A2FD334CA</string>
+</dict>
+</plist>
