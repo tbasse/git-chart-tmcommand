@@ -66,52 +66,50 @@ end
 
 def chart_timeline
   lines = `git log --pretty=format:%ai`
-  times = lines.collect { |d| Time.parse(d.to_s).strftime("%Y-%m-%d") }
-  
-  ds = Date.parse times[-1].to_s
-  de = Date.parse times[0].to_s
-  
+  times = lines.map { |l| Date.parse l }
+
+  days_limit = 90
+
+  date_range = ( times[0] - times[-1] )
+  dl = ( date_range &lt; days_limit ? date_range : days_limit )
+
   dates = Hash.new(0)
-  (ds .. de).each{ |date| dates[date.to_s] = 0 }
+  ( (times[0]-dl) .. DateTime.now ).each { |d| 
+    dates[d] = times.find_all{ |t| t.to_s == d.to_s }.size
+  }
 
-  times.each { |v| dates[v] += 1 }
-  dates = dates.sort
+  max = dates.map { |n, x| x  }.max + 10
+  max = max - ( max % 10 )
 
-  datelimit = ( dates.count &lt; 90 ? dates.count : 90 )
+  chart_data = dates.sort.map! { |k, v| "#{v}" }.join(",")
 
-  data = []
-  (1..datelimit).each{ |d| data &lt;&lt; dates[0-d] }
-  data = data.sort
-  
-  max = data.map { |n, x| x  }.max + 5
-
-  chart_data = ''
-  data.each { |k, v| chart_data += v.to_s + ',' }
-  chart_data = chart_data.chop
-  
   marks_step = ''
-  (0..data.count-1).step(10) { |x| marks_step += '|'+x.to_s }
+  (0..dates.count-1).step(10) { |x| marks_step += '|'+x.to_s }
 
   marks_str = ''
-  (0..data.count-1).step(10) { |x| marks_str += '|'+data[x][0].to_s }
-  
-  cd_size = "chs=800x350"
-  cd_grid = "chg=-1,-1,0,0"
-  cd_axis = "chxt=x,y"
-  cd_axis_pos = "chxp=#{marks_step}"
-  cd_axis_range = "chxr=0,0,#{data.count}|1,0,#{max}"
-  cd_tickmarks = "chxtc=0,10|1,5"
-  cd_axis_value = "chxl=0:#{marks_str}"
-  cd_data = "t:#{chart_data}"
-  cd_data_scale = "chds=0,#{max}"
-  cd_colors = "chco=3D7930,FF9900,666666"
-  
-  title = "Commit Activity over the last " + datelimit.to_s + " Days"
-  
-  url = "http://chart.apis.google.com/chart?chtt=#{title}&amp;cht=lc&amp;chxl=0:#{marks_str}&amp;chxp=#{marks_step}&amp;#{cd_axis_range}&amp;#{cd_tickmarks}&amp;#{cd_axis}&amp;#{cd_size}&amp;#{cd_data_scale}&amp;chd=#{cd_data}&amp;#{cd_grid}&amp;#{cd_colors}&amp;chma=20,20,20,20"
-  
-  out = URI.escape(url)
-  return out
+  (0..dates.count-1).step(10) { |x| marks_str += '|'+dates[x][0].to_s }
+
+
+  gc = Hash[[
+    ["cht", "lc"],
+    ["chs", "800x350"],
+    ["chtt", "Commit Activity over the last #{dl.to_s} Days"],
+    ["chxl", "0:#{marks_str}"],
+    ["chxp", marks_step],
+    ["chxr", "0,0,#{dates.count}|1,0,#{max}"],
+    ["chxtc", "0,10|1,5"],
+    ["chxt", "x,y"],
+    ["chma", "20,20,20,20"],
+    ["chco", "3D7930,FF9900"],
+    ["chds", "0,#{max}"],
+    ["chd", "t:#{chart_data}"],
+    ["chxl", "0:#{marks_str}"],
+    ["chxr", "0,0,#{dates.count}|1,0,#{max}"],
+    ["chxp", "#{marks_step}"],
+    ["chg", "-1,-1,0,0"],
+  ]]
+
+  return URI.escape( "http://chart.apis.google.com/chart?" + gc.sort.map! { |k, v| "#{k}=#{v}" }.join("&amp;") )
   
 end
 
