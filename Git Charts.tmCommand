@@ -53,19 +53,17 @@ def chart_authors
 
   values = []
   authors = []
-  authors_count = []
-  
-  c.each { |n, c| values &lt;&lt; c &amp;&amp; authors &lt;&lt; n &amp;&amp; authors_count &lt;&lt; n + ' (' + c.to_s + ')' }
-  
+
+  c.each { |n, c| values &lt;&lt; c &amp;&amp; authors &lt;&lt; n + ' (' + c.to_s + ')' }
+
   values = values[0..limit-1].join(',')
   authors = authors[0..limit-1].join('|')
-  authors_count = authors_count[0..limit-1].join('|')
 
-  url = "http://chart.apis.google.com/chart?chtt=#{title}&amp;chs=800x350&amp;cht=p&amp;chds=0,#{max}&amp;chd=t:#{values}&amp;chl=#{authors_count}&amp;chdl=#{authors}&amp;chdlp=l&amp;chp=360&amp;chma=20,20,20,20"
+  url = "http://chart.apis.google.com/chart?chtt=#{title}&amp;chs=800x350&amp;cht=p&amp;chds=0,#{max}&amp;chd=t:#{values}&amp;chl=#{authors}&amp;chdlp=l&amp;chp=360&amp;chma=20,20,20,20"
 
   out = URI.escape(url)
   return out
-  
+
 end
 
 def chart_timeline
