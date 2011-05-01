@@ -69,12 +69,11 @@ def chart_timeline
   times = lines.map { |l| Date.parse l }
 
   days_limit = 90
-
-  date_range = ( times[0] - times[-1] )
+  date_range = ( DateTime.now - (times[-1]) ).to_i
   dl = ( date_range &lt; days_limit ? date_range : days_limit )
 
   dates = Hash.new(0)
-  ( (times[0]-dl) .. DateTime.now ).each { |d| 
+  ( (times[0]-dl+1) .. DateTime.now ).each { |d| 
     dates[d] = times.find_all{ |t| t.to_s == d.to_s }.size
   }
   dates = dates.sort
@@ -82,11 +81,14 @@ def chart_timeline
   max = dates.map { |n, x| x  }.max + 10
   max = max - ( max % 10 )
 
-  marks_step = ''
-  (0..dates.count).step(10) { |x| marks_step += '|'+x.to_s }
-
-  marks_str = ''
-  (0..dates.count).step(10) { |x| marks_str += '|'+dates[x][0].to_s }
+  marks_step = []
+  marks_str = []
+  (0..dates.count).step(10) { |d|
+    marks_str &lt;&lt; dates[d][0] &amp;&amp; marks_step &lt;&lt; d
+  }
+  marks_str[-1] = dates[-1][0]
+  marks_str = '|' + marks_str.join('|')
+  marks_step = '|' + marks_step.join('|')
 
   chart_data = dates.map! { |k, v| "#{v}" }.join(",")
 
