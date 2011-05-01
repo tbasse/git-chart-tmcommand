@@ -34,14 +34,20 @@ def chart_commits
 end
 
 def chart_authors
+  author_limit = 10
   authors = _get_authors
 
   c = Hash.new(0)
   authors.each { |n| c[n] += 1 }
-  c = c.sort_by { |x| x[1] }
-  c = c.reverse
+  c = c.sort_by { |x| x[1] }.reverse
 
-  limit = ( c.count &lt; 10 ? c.count : 10 )
+  if c.count &lt; author_limit
+    limit = c.count
+    title = "Commits by Authors"
+  else
+    limit = author_limit
+    title = "Commits by Top " + limit.to_s + " Authors"
+  end
 
   max = c.map { |n, x| x  }.max
 
@@ -54,8 +60,6 @@ def chart_authors
   values = values[0..limit-1].join(',')
   authors = authors[0..limit-1].join('|')
   authors_count = authors_count[0..limit-1].join('|')
-
-  title = "Top " + limit.to_s + " Authors"
 
   url = "http://chart.apis.google.com/chart?chtt=#{title}&amp;chs=800x350&amp;cht=p&amp;chds=0,#{max}&amp;chd=t:#{values}&amp;chl=#{authors_count}&amp;chdl=#{authors}&amp;chdlp=l&amp;chp=360&amp;chma=20,20,20,20"
 
@@ -81,14 +85,11 @@ def chart_timeline
   max = dates.map { |n, x| x  }.max + 10
   max = max - ( max % 10 )
 
-  marks_step = []
-  marks_str = []
-  (0..dates.count).step(10) { |d|
-    marks_str &lt;&lt; dates[d][0] &amp;&amp; marks_step &lt;&lt; d
-  }
-  marks_str[-1] = dates[-1][0]
-  marks_str = '|' + marks_str.join('|')
-  marks_step = '|' + marks_step.join('|')
+  marks = []
+  (0..dates.count).step(10) { |d| marks &lt;&lt; [ d, dates[d][0] ] }
+  marks[-1][1] = dates[-1][0]
+  marks_str = '|' + marks.map { |k, v| "#{v}" }.join("|")
+  marks_step = '|' + marks.map { |k, v| "#{k}" }.join("|")
 
   chart_data = dates.map! { |k, v| "#{v}" }.join(",")
 
