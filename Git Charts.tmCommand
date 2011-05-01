@@ -77,18 +77,18 @@ def chart_timeline
   ( (times[0]-dl) .. DateTime.now ).each { |d| 
     dates[d] = times.find_all{ |t| t.to_s == d.to_s }.size
   }
-
+  dates = dates.sort
+  
   max = dates.map { |n, x| x  }.max + 10
   max = max - ( max % 10 )
 
-  chart_data = dates.sort.map! { |k, v| "#{v}" }.join(",")
-
   marks_step = ''
-  (0..dates.count-1).step(10) { |x| marks_step += '|'+x.to_s }
+  (0..dates.count).step(10) { |x| marks_step += '|'+x.to_s }
 
   marks_str = ''
-  (0..dates.count-1).step(10) { |x| marks_str += '|'+dates[x][0].to_s }
+  (0..dates.count).step(10) { |x| marks_str += '|'+dates[x][0].to_s }
 
+  chart_data = dates.map! { |k, v| "#{v}" }.join(",")
 
   gc = Hash[[
     ["cht", "lc"],
