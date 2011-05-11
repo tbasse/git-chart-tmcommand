@@ -1,8 +1,8 @@
 A TextMate command for Git Bundles that generates Charts via Google Chart API.
 
 - Commit Activity by Day and Hour (Like GitHubs Punchcard)
-- Commit Activity over the last 90 Days
-- Top 10 Authors
+- Commit Activity over the last 100 Days
+- Commit Activity by Authors (Top 10)
 
 ### Example ###
 
