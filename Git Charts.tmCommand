@@ -4,6 +4,8 @@
 <dict>
 	<key>beforeRunningCommand</key>
 	<string>nop</string>
+	<key>bundleUUID</key>
+	<string>EADD4718-EE11-4ABF-A7E6-13351FB3799D</string>
 	<key>command</key>
 	<string>#!/usr/bin/env ruby
 
@@ -84,7 +86,7 @@ def chart_timeline
   max = max - ( max % 10 )
 
   marks = []
-  (0..dates.count).step(10) { |d| marks &lt;&lt; [ d, dates[d][0] ] }
+  (0..dates.count-1).step(10) { |d| marks &lt;&lt; [ d, dates[d][0] ] }
   marks[-1][1] = dates[-1][0]
   marks_str = '|' + marks.map { |k, v| "#{v}" }.join("|")
   marks_step = '|' + marks.map { |k, v| "#{k}" }.join("|")
