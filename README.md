@@ -6,7 +6,7 @@ A TextMate command for Git Bundles that generates Charts via Google Chart API.
 
 ### Example ###
 
-![Example Image](https://github.com/tagedieb/git-chart-tmcommand/raw/master/example.png)
+![Example Image](https://github.com/tbasse/git-chart-tmcommand/raw/master/example.png)
 
 ### Install ###
 
